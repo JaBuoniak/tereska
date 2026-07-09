@@ -1,0 +1,89 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: #111;
+  color: #fff;
+  height: 100%;
+}
+
+#panel {
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 24px;
+  text-align: center;
+}
+
+h1 {
+  margin-bottom: 16px;
+}
+
+#callBtn {
+  font-size: 1.4rem;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 10px;
+  background: #2e7d32;
+  color: #fff;
+  cursor: pointer;
+}
+
+#callBtn:disabled {
+  background: #555;
+  cursor: default;
+}
+
+#hangupBtn {
+  font-size: 1.4rem;
+  padding: 16px 32px;
+  border: none;
+  border-radius: 10px;
+  background: #c62828;
+  color: #fff;
+  cursor: pointer;
+  margin-left: 12px;
+}
+
+#messageBar {
+  display: flex;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+#messageInput {
+  flex: 1;
+  font-size: 1.1rem;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid #444;
+  background: #222;
+  color: #fff;
+}
+
+#sendBtn {
+  font-size: 1.1rem;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #1565c0;
+  color: #fff;
+  cursor: pointer;
+}
+
+#status {
+  margin-top: 12px;
+  min-height: 1.5em;
+  color: #ccc;
+}
+
+video {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 16px;
+  border-radius: 8px;
+  background: #000;
+}
+
+#localVideo {
+  transform: scaleX(-1);
+}

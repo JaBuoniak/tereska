@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<title>Tereska — Zadzwoń</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="panel">
+    <h1>Tereska</h1>
+    <button id="callBtn">Zadzwoń do babci</button>
+    <button id="hangupBtn" hidden>Zakończ rozmowę</button>
+    <div id="status"></div>
+    <div id="messageBar" hidden>
+      <input type="text" id="messageInput" placeholder="Komunikat (rozpoznana mowa — możesz poprawić)">
+      <button id="sendBtn">Wyślij</button>
+    </div>
+    <video id="localVideo" autoplay playsinline muted></video>
+    <video id="remoteVideo" autoplay playsinline></video>
+  </div>
+
+  <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
