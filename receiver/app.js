@@ -46,17 +46,65 @@ function setStatus(show) {
   statusEl.style.display = show ? "flex" : "none";
 }
 
+// STARTUJ ZEGAR NIEZALEŻNIE OD PEER
+updateClock();
+setInterval(updateClock, 1000);
+
 async function start() {
   const peer = new Peer(RECEIVER_ID);
 
   peer.on("open", () => {
-    updateClock();
     setStatus(true);
-    // Aktualizuj zegar co sekundę
-    setInterval(updateClock, 1000);
   });
 
   peer.on("error", (err) => {
     console.error("Peer error:", err);
-    setStatus(true);
-    timeEl.textContent
+    timeEl.textContent = "Błąd";
+    dateEl.textContent = "Ponawiam...";
+    dayEl.textContent = "";
+    setTimeout(() => location.reload(), 5000);
+  });
+
+  peer.on("call", async (call) => {
+    setStatus(false);
+    let localStream;
+    try {
+      localStream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: true,
+      });
+    } catch (err) {
+      console.error("Nie udało się uzyskać kamery/mikrofonu:", err);
+      localStream = new MediaStream();
+    }
+
+    call.answer(localStream);
+
+    call.on("stream", (remoteStream) => {
+      videoEl.srcObject = remoteStream;
+    });
+
+    call.on("close", () => {
+      videoEl.srcObject = null;
+      setStatus(true);
+    });
+
+    call.on("error", (err) => {
+      console.error("Call error:", err);
+      videoEl.srcObject = null;
+      setStatus(true);
+    });
+
+    call.on("connection", () => {});
+  });
+
+  peer.on("connection", (conn) => {
+    conn.on("data", (data) => {
+      if (typeof data === "string" && data.trim().length > 0) {
+        showCaption(data);
+      }
+    });
+  });
+}
+
+start();
