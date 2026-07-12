@@ -23,9 +23,32 @@ html, body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2vh;
+}
+
+#time {
   color: #fff;
-  font-size: 4vw;
+  font-size: 12vw;
+  font-weight: bold;
+  line-height: 1;
+  text-shadow: 0 0 20px #000, 0 0 20px #000;
+}
+
+#date {
+  color: #fff;
+  font-size: 6vw;
   text-align: center;
+  text-shadow: 0 0 10px #000, 0 0 10px #000;
+}
+
+#day {
+  color: #fff;
+  font-size: 5vw;
+  text-align: center;
+  text-shadow: 0 0 10px #000, 0 0 10px #000;
 }
 
 #captions {
