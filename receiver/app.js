@@ -51,28 +51,32 @@ function setStatus(show) {
   statusEl.style.display = show ? "flex" : "none";
 }
 
-async function loadSlides() {
+async function loadSlides(retryCount = 0) {
   try {
-    const response = await fetch("http://localhost:8000/Obrazy/");
-    const html = await response.text();
+    const response = await fetch("http://localhost:8000/api/images", { timeout: 3000 });
     
-    // Parsuj HTML directory listing
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, "text/html");
-    const links = doc.querySelectorAll("a");
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
     
-    slides = [];
-    links.forEach(link => {
-      const href = link.getAttribute("href");
-      if (href && /\.(jpg|jpeg|png|gif|webp)$/i.test(href) && !href.startsWith("?")) {
-        slides.push(`http://localhost:8000/Obrazy/${href}`);
-      }
-    });
+    slides = await response.json();
     
-    console.log(`Załadowano ${slides.length} zdjęć`);
+    if (slides.length > 0) {
+      console.log(`✓ Załadowano ${slides.length} zdjęć`);
+      slideshowEnabled = true;
+    } else {
+      console.warn("⚠ Brak zdjęć w /Obrazy/");
+      slideshowEnabled = false;
+    }
   } catch (err) {
-    console.error("Nie można załadować zdjęć:", err);
-    slides = [];
+    console.error(`✗ Błąd ładowania zdjęć (próba ${retryCount + 1}/3):`, err);
+    
+    if (retryCount < 2) {
+      setTimeout(() => loadSlides(retryCount + 1), 5000);
+    } else {
+      console.error("✗ Nie udało się załadować zdjęć - slideshow wyłączony");
+      slideshowEnabled = false;
+    }
   }
 }
 
