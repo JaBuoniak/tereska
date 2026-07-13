@@ -1,8 +1,7 @@
 const RECEIVER_ID = "tereska-receiver";
 const CAPTION_HOLD_MS = 6000;
-const SLIDESHOW_INTERVAL = 10 * 1000;      // 10 sekund (TEST)
-const SLIDESHOW_DURATION = 5 * 1000;       // 5 sekund (TEST)
-const SLIDE_CHANGE_MS = 1000;              // zmiana zdjęcia co 1 sekundę (TEST)
+const SLIDESHOW_INTERVAL = 60 * 60 * 1000;  // Co godzinę
+const SLIDE_CHANGE_MS = 3000;                // 3 sekundy na zdjęcie = ~30 min dla 600 zdjęć
 
 const statusEl = document.getElementById("status");
 const timeEl = document.getElementById("time");
@@ -17,6 +16,8 @@ let captionHideTimer = null;
 let slideshowTimer = null;
 let currentSlideIndex = 0;
 let slides = [];
+let slideshowEnabled = false;
+let isShowingSlideshow = false;
 
 const dayNames = ["niedziela", "poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota"];
 const monthNames = ["stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca", 
@@ -63,6 +64,9 @@ async function loadSlides(retryCount = 0) {
     
     if (slides.length > 0) {
       console.log(`✓ Załadowano ${slides.length} zdjęć`);
+      const totalSeconds = slides.length * (SLIDE_CHANGE_MS / 1000);
+      const minutes = Math.round(totalSeconds / 60);
+      console.log(`✓ Pokaz potrwa ~${minutes} minut`);
       slideshowEnabled = true;
     } else {
       console.warn("⚠ Brak zdjęć w /Obrazy/");
@@ -88,38 +92,50 @@ function nextSlide() {
 }
 
 function startSlideshow() {
-  if (slides.length === 0) return;
+  if (!slideshowEnabled || slides.length === 0) {
+    console.warn("⚠ Slideshow niedostępne");
+    setTimeout(startSlideshow, SLIDESHOW_INTERVAL);
+    return;
+  }
   
+  console.log("▶ Slideshow START");
+  isShowingSlideshow = true;
   statusEl.style.display = "none";
   slideshowEl.style.display = "flex";
   currentSlideIndex = 0;
   nextSlide();
   
+  // Zmienia zdjęcia co 3 sekundy
   slideshowTimer = setInterval(nextSlide, SLIDE_CHANGE_MS);
   
-  // Zatrzymaj slideshow po 5 minutach
-  setTimeout(stopSlideshow, SLIDESHOW_DURATION);
+  // Po przesunięciu wszystkich zdjęć (~30 minut) - stop
+  const totalDuration = slides.length * SLIDE_CHANGE_MS;
+  setTimeout(stopSlideshow, totalDuration);
 }
 
 function stopSlideshow() {
   clearInterval(slideshowTimer);
   slideshowEl.style.display = "none";
   statusEl.style.display = "flex";
+  isShowingSlideshow = false;
   
-  // Zaplanuj następny slideshow za 30 minut
+  console.log("⏹ Slideshow STOP - zegar wraca");
+  
+  // Zaplanuj następny slideshow za godzinę
   setTimeout(startSlideshow, SLIDESHOW_INTERVAL);
-}
-
-function setStatus(show) {
-  statusEl.style.display = show ? "flex" : "none";
 }
 
 // STARTUJ ZEGAR NIEZALEŻNIE
 updateClock();
 setInterval(updateClock, 1000);
 
-// Załaduj zdjęcia i zaplanuj slideshow
+// Załaduj zdjęcia z retry logiką
 loadSlides();
+
+// Spróbuj załadować zdjęcia co godzinę (na wypadek dodania nowych)
+setInterval(() => loadSlides(), 60 * 60 * 1000);
+
+// Zaplanuj pierwszy slideshow za godzinę
 setTimeout(startSlideshow, SLIDESHOW_INTERVAL);
 
 async function start() {
@@ -131,13 +147,16 @@ async function start() {
 
   peer.on("error", (err) => {
     console.error("Peer error:", err);
-    // Nie pokazuj błędu - zostaw zegar
   });
 
   peer.on("call", async (call) => {
     setStatus(false);
-    clearInterval(slideshowTimer);
-    slideshowEl.style.display = "none";
+    
+    // Stop slideshow jeśli trwa
+    if (isShowingSlideshow) {
+      clearInterval(slideshowTimer);
+      slideshowEl.style.display = "none";
+    }
     
     let localStream;
     try {
@@ -159,6 +178,8 @@ async function start() {
     call.on("close", () => {
       videoEl.srcObject = null;
       setStatus(true);
+      isShowingSlideshow = false;
+      // Zaplanuj slideshow za godzinę od końca połączenia
       setTimeout(startSlideshow, SLIDESHOW_INTERVAL);
     });
 
@@ -166,6 +187,7 @@ async function start() {
       console.error("Call error:", err);
       videoEl.srcObject = null;
       setStatus(true);
+      isShowingSlideshow = false;
     });
 
     call.on("connection", () => {});
