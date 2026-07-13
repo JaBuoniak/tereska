@@ -1,8 +1,8 @@
 const RECEIVER_ID = "tereska-receiver";
 const CAPTION_HOLD_MS = 6000;
-const SLIDESHOW_INTERVAL = 30 * 60 * 1000; // 30 minut
-const SLIDESHOW_DURATION = 5 * 60 * 1000;  // 5 minut
-const SLIDE_CHANGE_MS = 3000;               // zmiana zdjęcia co 3 sekundy
+const SLIDESHOW_INTERVAL = 10 * 1000;      // 10 sekund (TEST)
+const SLIDESHOW_DURATION = 5 * 1000;       // 5 sekund (TEST)
+const SLIDE_CHANGE_MS = 1000;              // zmiana zdjęcia co 1 sekundę (TEST)
 
 const statusEl = document.getElementById("status");
 const timeEl = document.getElementById("time");
