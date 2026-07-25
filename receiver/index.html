@@ -8,7 +8,16 @@
 <body>
   <video id="remoteVideo" autoplay playsinline></video>
   <div id="captions"></div>
-  <div id="status">Czekam na połączenie...</div>
+
+  <div id="status">
+    <div id="time">00:00</div>
+    <div id="date">1 stycznia 2024</div>
+    <div id="day">poniedziałek</div>
+  </div>
+
+  <div id="slideshow">
+    <img id="slideImage" src="" alt="Zdjęcie">
+  </div>
 
   <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
   <script src="app.js"></script>

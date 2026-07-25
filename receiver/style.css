@@ -23,9 +23,35 @@ html, body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: #fff;
-  font-size: 4vw;
   text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 2vh;
+}
+
+#time {
+  color: #fff;
+  font-size: 12vw;
+  font-weight: bold;
+  line-height: 1;
+  text-shadow: 0 0 20px #000, 0 0 20px #000;
+  margin: 0;
+}
+
+#date {
+  color: #fff;
+  font-size: 6vw;
+  text-align: center;
+  text-shadow: 0 0 10px #000, 0 0 10px #000;
+  margin: 0;
+}
+
+#day {
+  color: #fff;
+  font-size: 5vw;
+  text-align: center;
+  text-shadow: 0 0 10px #000, 0 0 10px #000;
+  margin: 0;
 }
 
 #captions {
@@ -48,4 +74,23 @@ html, body {
 
 #captions.visible {
   opacity: 1;
+}
+
+#slideshow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  background: #000;
+  z-index: 10;
+}
+
+#slideImage {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
 }
