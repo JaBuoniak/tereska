@@ -1,6 +1,6 @@
 const RECEIVER_ID = "tereska-receiver";
 const CAPTION_HOLD_MS = 6000;
-const SLIDESHOW_INTERVAL = 60 * 60 * 1000;  // Co godzinę
+const SLIDESHOW_INTERVAL = 30 * 60 * 1000;  // Co pół godziny
 const SLIDE_CHANGE_MS = 10 * 1000;           // 10 sekund na zdjęcie
 const SLIDES_PER_SESSION = 30;               // 30 zdjęć per sesja
 const SLIDESHOW_START_HOUR = 8;              // Słownie pokazy: od 8 rano
@@ -200,11 +200,13 @@ async function start() {
   const peer = await createPeer(RECEIVER_ID);
 
   peer.on("open", () => {
-    setStatus(true);
+    setStatus("Czekam na połączenie...");
   });
 
   peer.on("error", (err) => {
     console.error("Peer error:", err);
+    setStatus("Błąd połączenia, ponawiam...");
+    setTimeout(() => location.reload(), 5000);
   });
 
   peer.on("call", async (call) => {
