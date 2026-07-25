@@ -1,6 +1,6 @@
 const RECEIVER_ID = "tereska-receiver";
 const CAPTION_HOLD_MS = 6000;
-const SLIDESHOW_INTERVAL = 30 * 60 * 1000;  // Co pół godziny
+const SLIDESHOW_INTERVAL = 30 * 60 * 1000;  // Pokazy co 30 minut
 const SLIDE_CHANGE_MS = 10 * 1000;           // 10 sekund na zdjęcie
 const SLIDES_PER_SESSION = 30;               // 30 zdjęć per sesja
 const SLIDESHOW_START_HOUR = 8;              // Słownie pokazy: od 8 rano
@@ -151,25 +151,45 @@ function stopSlideshow() {
 
   currentSession++;
 
-  // Sprawdź czy jeszcze można grać w dzisiejszym dniu
+  // Zaplanuj następny pokaz na następny slot (co 30 minut)
+  const nextShowTime = calculateNextSlideshowTime();
   const now = new Date();
-  const nextSessionTime = new Date(now.getTime() + 30 * 60 * 1000); // 30 minut do przodu
+  const delayMs = nextShowTime - now;
+  console.log(`⏰ Następny pokaz o ${nextShowTime.toLocaleTimeString('pl-PL')} (za ${Math.round(delayMs / (60 * 1000))} minut)`);
 
-  let delayMs;
-  if (nextSessionTime.getHours() >= SLIDESHOW_END_HOUR) {
-    // Po 18:00 - zaplanuj na 8 rano następnego dnia
+  setTimeout(startSlideshow, delayMs);
+}
+
+function calculateNextSlideshowTime() {
+  const now = new Date();
+
+  // Poza godzinami pokazu (przed 8 lub od 18)
+  if (now.getHours() < SLIDESHOW_START_HOUR || now.getHours() >= SLIDESHOW_END_HOUR) {
     const nextDay = new Date(now);
     nextDay.setDate(nextDay.getDate() + 1);
     nextDay.setHours(SLIDESHOW_START_HOUR, 0, 0, 0);
-    delayMs = nextDay - now;
-    console.log(`⏰ Koniec godzin pokazu. Następny pokaz jutro o ${nextDay.toLocaleTimeString('pl-PL')}`);
-  } else {
-    // Jeszcze w godzinach - zaplanuj za 30 minut
-    delayMs = 30 * 60 * 1000;
-    console.log(`Następny pokaz za 30 minut`);
+    return nextDay;
   }
 
-  setTimeout(startSlideshow, delayMs);
+  // W godzinach pokazu (8-17:59)
+  // Sloty: :00 i :30 każdej godziny
+  let nextShow = new Date(now);
+
+  if (now.getMinutes() < 30) {
+    nextShow.setMinutes(30, 0, 0);
+  } else {
+    nextShow.setHours(nextShow.getHours() + 1, 0, 0, 0);
+  }
+
+  // Jeśli następna godzina >= 18, pokaz jutro o 8:00
+  if (nextShow.getHours() >= SLIDESHOW_END_HOUR) {
+    const nextDay = new Date(now);
+    nextDay.setDate(nextDay.getDate() + 1);
+    nextDay.setHours(SLIDESHOW_START_HOUR, 0, 0, 0);
+    return nextDay;
+  }
+
+  return nextShow;
 }
 
 // STARTUJ ZEGAR NIEZALEŻNIE
@@ -182,8 +202,12 @@ loadSlides();
 // Spróbuj załadować zdjęcia co godzinę (na wypadek dodania nowych)
 setInterval(() => loadSlides(), 60 * 60 * 1000);
 
-// Zaplanuj pierwszy slideshow za godzinę
-setTimeout(startSlideshow, SLIDESHOW_INTERVAL);
+// Zaplanuj pierwszy slideshow na następny slot (8:00, 8:30, 9:00, itd.)
+const firstShowTime = calculateNextSlideshowTime();
+const now = new Date();
+const delayMs = firstShowTime - now;
+console.log(`⏰ Pierwszy pokaz o ${firstShowTime.toLocaleTimeString('pl-PL')}`);
+setTimeout(startSlideshow, delayMs);
 
 async function createPeer(id) {
   try {

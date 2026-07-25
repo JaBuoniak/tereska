@@ -5,12 +5,10 @@ import os
 import json
 from pathlib import Path
 from urllib.parse import quote
-import urllib.request
 
 PORT = 8000
 REPO_DIR = '/home/tereska/repo'
 IMAGES_DIR = '/home/tereska/Obrazy'
-TURN_WORKER_URL = 'https://tereska-turn.pjablonski-elk.workers.dev'
 
 class CORSRequestHandler(http.server.SimpleHTTPRequestHandler):
     def end_headers(self):
@@ -24,20 +22,7 @@ class CORSRequestHandler(http.server.SimpleHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        if self.path == '/api/turn-credentials':
-            try:
-                with urllib.request.urlopen(TURN_WORKER_URL, timeout=5) as resp:
-                    data = resp.read()
-                self.send_response(200)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(data)
-            except Exception as e:
-                self.send_response(502)
-                self.send_header('Content-type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({"error": str(e)}).encode())
-        elif self.path == '/api/images':
+        if self.path == '/api/images':
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -67,5 +52,4 @@ os.chdir(REPO_DIR)
 with socketserver.TCPServer(("", PORT), CORSRequestHandler) as httpd:
     print(f"Serwer startuje na http://localhost:{PORT}")
     print(f"API: http://localhost:8000/api/images")
-    print(f"TURN: http://localhost:8000/api/turn-credentials")
     httpd.serve_forever()
