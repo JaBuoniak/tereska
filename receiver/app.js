@@ -14,14 +14,14 @@ const videoEl = document.getElementById("remoteVideo");
 const captionsEl = document.getElementById("captions");
 const slideshowEl = document.getElementById("slideshow");
 const slideImageEl = document.getElementById("slideImage");
+const debugEl = document.getElementById("debug-info");
 
 let captionHideTimer = null;
 let slideshowTimer = null;
-let currentSlideIndex = 0;
 let slides = [];
 let slideshowEnabled = false;
 let isShowingSlideshow = false;
-let currentSession = 0;
+let nextSlideIndex = 0;  // Index następnego zdjęcia do wyświetlenia
 
 const dayNames = ["niedziela", "poniedziałek", "wtorek", "środa", "czwartek", "piątek", "sobota"];
 const monthNames = ["stycznia", "lutego", "marca", "kwietnia", "maja", "czerwca",
@@ -68,15 +68,19 @@ async function loadSlides(retryCount = 0) {
 
     if (slides.length > 0) {
       console.log(`✓ Załadowano ${slides.length} zdjęć`);
+      nextSlideIndex = 0;
+      debugEl.textContent = `${nextSlideIndex + 1}/${slides.length}`;
       const sessionDuration = SLIDES_PER_SESSION * (SLIDE_CHANGE_MS / 1000);
       console.log(`✓ Sesja potrwa ~${Math.round(sessionDuration / 60)} minut (${SLIDES_PER_SESSION} zdjęć po ${SLIDE_CHANGE_MS / 1000}s)`);
       slideshowEnabled = true;
     } else {
       console.warn("⚠ Brak zdjęć w /Obrazy/");
+      debugEl.textContent = '0';
       slideshowEnabled = false;
     }
   } catch (err) {
     console.error(`✗ Błąd ładowania zdjęć (próba ${retryCount + 1}/3):`, err);
+    debugEl.textContent = '!';
 
     if (retryCount < 2) {
       setTimeout(() => loadSlides(retryCount + 1), 5000);
@@ -95,13 +99,9 @@ function isWithinSlideshowHours() {
 function nextSlide() {
   if (slides.length === 0) return;
 
-  const totalSessions = Math.ceil(slides.length / SLIDES_PER_SESSION);
-  const sessionIndex = currentSession % totalSessions;
-  const startIndex = sessionIndex * SLIDES_PER_SESSION;
-  const slideIndex = startIndex + currentSlideIndex;
-
-  slideImageEl.src = slides[slideIndex];
-  currentSlideIndex = (currentSlideIndex + 1) % SLIDES_PER_SESSION;
+  slideImageEl.src = slides[nextSlideIndex];
+  debugEl.textContent = `${nextSlideIndex + 1}/${slides.length}`;
+  nextSlideIndex = (nextSlideIndex + 1) % slides.length;
 }
 
 function startSlideshow() {
@@ -129,7 +129,6 @@ function startSlideshow() {
   isShowingSlideshow = true;
   statusEl.style.display = "none";
   slideshowEl.style.display = "flex";
-  currentSlideIndex = 0;
   nextSlide();
 
   // Zmienia zdjęcia co SLIDE_CHANGE_MS
@@ -145,11 +144,9 @@ function stopSlideshow() {
   slideshowEl.style.display = "none";
   statusEl.style.display = "flex";
   isShowingSlideshow = false;
+  debugEl.textContent = `${nextSlideIndex + 1}/${slides.length}`;
 
-  const totalSessions = Math.ceil(slides.length / SLIDES_PER_SESSION);
-  console.log(`⏹ Slideshow STOP - sesja ${currentSession + 1}/${totalSessions}`);
-
-  currentSession++;
+  console.log(`⏹ Slideshow STOP - następne zdjęcie: ${nextSlideIndex + 1}/${slides.length}`);
 
   // Zaplanuj następny pokaz na następny slot (co 30 minut)
   const nextShowTime = calculateNextSlideshowTime();
