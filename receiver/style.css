@@ -113,9 +113,10 @@ html, body {
   right: 2vh;
   color: #fff;
   font-size: 0.8vw;
-  opacity: 0.15;
+  opacity: 0.3;
   font-family: monospace;
   text-align: right;
   max-width: 30vw;
   word-wrap: break-word;
+  z-index: 100;  /* Ponad slideshow */
 }
