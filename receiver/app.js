@@ -15,6 +15,29 @@ const captionsEl = document.getElementById("captions");
 const slideshowEl = document.getElementById("slideshow");
 const slideImageEl = document.getElementById("slideImage");
 const debugEl = document.getElementById("debug-info");
+const debugLogEl = document.getElementById("debug-log");
+
+// Przechwytuj console.log i wszystkie błędy dla debug konsoli
+const originalLog = console.log;
+console.log = function(...args) {
+  originalLog.apply(console, args);
+  debugLogEl.textContent = args.join(' ');
+};
+
+// Uncaught exceptions
+window.onerror = function(message, source, lineno, colno, error) {
+  const msg = `ERROR: ${message}`;
+  originalLog(msg);
+  debugLogEl.textContent = msg;
+  return false;
+};
+
+// Unhandled promise rejections
+window.onunhandledrejection = function(event) {
+  const msg = `UNHANDLED: ${event.reason}`;
+  originalLog(msg);
+  debugLogEl.textContent = msg;
+};
 
 let captionHideTimer = null;
 let slideshowTimer = null;
@@ -67,25 +90,25 @@ async function loadSlides(retryCount = 0) {
     slides = await response.json();
 
     if (slides.length > 0) {
-      console.log(`✓ Załadowano ${slides.length} zdjęć`);
+      console.log(`Loaded ${slides.length} images`);
       nextSlideIndex = 0;
       debugEl.textContent = `${nextSlideIndex + 1}/${slides.length}`;
       const sessionDuration = SLIDES_PER_SESSION * (SLIDE_CHANGE_MS / 1000);
-      console.log(`✓ Sesja potrwa ~${Math.round(sessionDuration / 60)} minut (${SLIDES_PER_SESSION} zdjęć po ${SLIDE_CHANGE_MS / 1000}s)`);
+      console.log(`Session ~${Math.round(sessionDuration / 60)}min (${SLIDES_PER_SESSION} slides @ ${SLIDE_CHANGE_MS / 1000}s)`);
       slideshowEnabled = true;
     } else {
-      console.warn("⚠ Brak zdjęć w /Obrazy/");
+      console.warn("No images in directory");
       debugEl.textContent = '0';
       slideshowEnabled = false;
     }
   } catch (err) {
-    console.error(`✗ Błąd ładowania zdjęć (próba ${retryCount + 1}/3):`, err);
+    console.error(`Load error (attempt ${retryCount + 1}/3): ${err.message}`);
     debugEl.textContent = '!';
 
     if (retryCount < 2) {
       setTimeout(() => loadSlides(retryCount + 1), 5000);
     } else {
-      console.error("✗ Nie udało się załadować zdjęć - slideshow wyłączony");
+      console.error("Load failed - slideshow disabled");
       slideshowEnabled = false;
     }
   }
@@ -114,18 +137,18 @@ function startSlideshow() {
     }
     nextStart.setHours(SLIDESHOW_START_HOUR, 0, 0, 0);
     const timeUntilStart = nextStart - now;
-    console.log(`⏰ Poza godzinami pokazu (${SLIDESHOW_START_HOUR}:00-${SLIDESHOW_END_HOUR}:00). Nastę pny pokaz o ${nextStart.toLocaleTimeString('pl-PL')}`);
+    console.log(`Outside hours (${SLIDESHOW_START_HOUR}:00-${SLIDESHOW_END_HOUR}:00). Next: ${nextStart.toLocaleTimeString('pl-PL')}`);
     setTimeout(startSlideshow, timeUntilStart);
     return;
   }
 
   if (!slideshowEnabled || slides.length === 0) {
-    console.warn("⚠ Slideshow niedostępne");
+    console.warn("Slideshow unavailable");
     setTimeout(startSlideshow, SLIDESHOW_INTERVAL);
     return;
   }
 
-  console.log("▶ Slideshow START");
+  console.log("Slideshow START");
   isShowingSlideshow = true;
   statusEl.style.display = "none";
   slideshowEl.style.display = "flex";
@@ -146,13 +169,13 @@ function stopSlideshow() {
   isShowingSlideshow = false;
   debugEl.textContent = `${nextSlideIndex + 1}/${slides.length}`;
 
-  console.log(`⏹ Slideshow STOP - następne zdjęcie: ${nextSlideIndex + 1}/${slides.length}`);
+  console.log(`Slideshow STOP - next: ${nextSlideIndex + 1}/${slides.length}`);
 
   // Zaplanuj następny pokaz na następny slot (co 30 minut)
   const nextShowTime = calculateNextSlideshowTime();
   const now = new Date();
   const delayMs = nextShowTime - now;
-  console.log(`⏰ Następny pokaz o ${nextShowTime.toLocaleTimeString('pl-PL')} (za ${Math.round(delayMs / (60 * 1000))} minut)`);
+  console.log(`Next show at ${nextShowTime.toLocaleTimeString('pl-PL')} (${Math.round(delayMs / (60 * 1000))}min)`);
 
   setTimeout(startSlideshow, delayMs);
 }
@@ -203,7 +226,7 @@ setInterval(() => loadSlides(), 60 * 60 * 1000);
 const firstShowTime = calculateNextSlideshowTime();
 const now = new Date();
 const delayMs = firstShowTime - now;
-console.log(`⏰ Pierwszy pokaz o ${firstShowTime.toLocaleTimeString('pl-PL')}`);
+console.log(`First show at ${firstShowTime.toLocaleTimeString('pl-PL')}`);
 setTimeout(startSlideshow, delayMs);
 
 async function createPeer(id) {
@@ -212,7 +235,7 @@ async function createPeer(id) {
     const { iceServers } = await resp.json();
     return new Peer(id, { config: { iceServers } });
   } catch (err) {
-    console.warn('Failed to fetch TURN credentials, using default config:', err);
+    console.warn(`TURN fetch failed: ${err.message}`);
   }
   return new Peer(id);
 }
@@ -225,7 +248,7 @@ async function start() {
   });
 
   peer.on("error", (err) => {
-    console.error("Peer error:", err);
+    console.error(`Peer error: ${err.message}`);
     setStatus("Błąd połączenia, ponawiam...");
     setTimeout(() => location.reload(), 5000);
   });
@@ -246,7 +269,7 @@ async function start() {
         audio: true,
       });
     } catch (err) {
-      console.error("Nie udało się uzyskać kamery/mikrofonu:", err);
+      console.error(`Camera/mic error: ${err.message}`);
       localStream = new MediaStream();
     }
 
@@ -265,7 +288,7 @@ async function start() {
     });
 
     call.on("error", (err) => {
-      console.error("Call error:", err);
+      console.error(`Call error: ${err.message}`);
       videoEl.srcObject = null;
       setStatus(true);
       isShowingSlideshow = false;

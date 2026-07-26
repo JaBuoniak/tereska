@@ -97,7 +97,7 @@ html, body {
 
 #debug-info {
   position: fixed;
-  bottom: 2vh;
+  bottom: 6vh;
   right: 2vh;
   color: #fff;
   font-size: 1.2vw;
@@ -105,4 +105,17 @@ html, body {
   font-family: monospace;
   text-align: right;
   line-height: 1.2;
+}
+
+#debug-log {
+  position: fixed;
+  bottom: 2vh;
+  right: 2vh;
+  color: #fff;
+  font-size: 0.8vw;
+  opacity: 0.15;
+  font-family: monospace;
+  text-align: right;
+  max-width: 30vw;
+  word-wrap: break-word;
 }
