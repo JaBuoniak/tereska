@@ -120,11 +120,18 @@ function isWithinSlideshowHours() {
 }
 
 function nextSlide() {
-  if (slides.length === 0) return;
+  if (slides.length === 0) {
+    console.log("nextSlide: no slides");
+    return;
+  }
 
-  slideImageEl.src = slides[nextSlideIndex];
-  debugEl.textContent = `${nextSlideIndex + 1}/${slides.length}`;
-  nextSlideIndex = (nextSlideIndex + 1) % slides.length;
+  try {
+    slideImageEl.src = slides[nextSlideIndex];
+    debugEl.textContent = `${nextSlideIndex + 1}/${slides.length}`;
+    nextSlideIndex = (nextSlideIndex + 1) % slides.length;
+  } catch (e) {
+    console.log(`nextSlide error: ${e.message}`);
+  }
 }
 
 function startSlideshow() {
@@ -154,7 +161,8 @@ function startSlideshow() {
   slideshowEl.style.display = "flex";
   nextSlide();
 
-  // Zmienia zdjęcia co SLIDE_CHANGE_MS
+  // Zmienia zdjęcia co SLIDE_CHANGE_MS (tylko podczas slideshow)
+  if (slideshowTimer) clearInterval(slideshowTimer);
   slideshowTimer = setInterval(nextSlide, SLIDE_CHANGE_MS);
 
   // Po wyświetleniu SLIDES_PER_SESSION zdjęć - stop (i czekaj 30 minut)

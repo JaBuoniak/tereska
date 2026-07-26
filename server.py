@@ -36,8 +36,8 @@ class CORSRequestHandler(http.server.SimpleHTTPRequestHandler):
                     for file in sorted(files):
                         if Path(file).suffix.lower() in image_extensions:
                             full_path = os.path.join(root, file)
-                            # Zwróć relative path z URL encoding
-                            rel_path = os.path.relpath(full_path, '/home/tereska')
+                            # Zwróć relative path z URL encoding (względem REPO_DIR gdzie serwer serwuje)
+                            rel_path = os.path.relpath(full_path, REPO_DIR)
                             # URL-encode całą ścieżkę (safe='/' żeby nie encodować slashów)
                             encoded_path = quote(rel_path, safe='/')
                             images.append(f"http://localhost:{PORT}/{encoded_path}")
